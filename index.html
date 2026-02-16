@@ -3,63 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTPSHOP - Member System</title>
+    <title>OTPSHOP - System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ใช้ Firebase Compat Version เพื่อความเสถียรบนเว็บเบราว์เซอร์ -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap');
-        body { font-family: 'Kanit', sans-serif; background-color: #060608; color: white; }
+        body { font-family: 'Kanit', sans-serif; background-color: #060608; color: white; margin: 0; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .btn-gradient { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); }
-        input { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; }
+        input { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; transition: 0.3s; }
+        input:focus { border-color: #a855f7 !important; }
         .hidden { display: none; }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen relative pb-24">
+<body class="max-w-md mx-auto min-h-screen">
 
-    <!-- ส่วนล็อกอินและสมัครสมาชิก -->
-    <div id="auth-layer" class="fixed inset-0 z-[1000] bg-[#060608] flex items-center justify-center p-6 overflow-y-auto">
-        <div class="glass p-8 rounded-[2.5rem] w-full border border-purple-500/20 shadow-2xl my-auto">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-lg">🔐</div>
-                <h2 id="auth-title" class="text-2xl font-black italic uppercase">Login</h2>
-                <p id="auth-subtitle" class="text-gray-500 text-[10px] mt-1 uppercase font-bold">เข้าสู่ระบบด้วยชื่อผู้ใช้</p>
-            </div>
-
-            <div class="space-y-3">
-                <!-- ช่อง Username (ใช้ทั้ง Login และ Register) -->
-                <div class="space-y-1">
-                    <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Username</label>
-                    <input type="text" id="auth-username" placeholder="ชื่อผู้ใช้" class="w-full p-4 rounded-2xl text-sm">
-                </div>
-
-                <!-- ช่องสำหรับหน้าสมัครสมาชิกเท่านั้น -->
-                <div id="register-only" class="hidden space-y-3">
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Recovery Email</label>
-                        <input type="email" id="auth-email" placeholder="อีเมลสำหรับกู้รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Password</label>
-                        <input type="password" id="auth-reg-password" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Confirm Password</label>
-                        <input type="password" id="auth-confirm-password" placeholder="ยืนยันรหัสผ่านอีกครั้ง" class="w-full p-4 rounded-2xl text-sm">
-                    </div>
-                </div>
-
-                <!-- ช่องสำหรับหน้าล็อกอินเท่านั้น -->
-                <div id="login-only" class="space-y-1">
-                    <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Password</label>
-                    <input type="password" id="auth-login-password" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
-                </div>
+    <!-- หน้า Auth (Login / Register) -->
+    <div id="auth-layer" class="fixed inset-0 z-[1000] bg-[#060608] flex items-center justify-center p-6">
+        <div class="glass p-8 rounded-[2.5rem] w-full border border-purple-500/20 shadow-2xl">
+            <h2 id="auth-title" class="text-2xl font-black italic uppercase text-center mb-6 text-purple-500">Login</h2>
+            
+            <div class="space-y-4">
+                <input type="text" id="auth-username" placeholder="Username (ชื่อผู้ใช้)" class="w-full p-4 rounded-2xl text-sm">
                 
-                <button onclick="handleAuth()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest shadow-lg mt-4 active:scale-95 transition">
-                    ตกลง
-                </button>
+                <div id="reg-fields" class="hidden space-y-4">
+                    <input type="email" id="auth-email" placeholder="Email (สำหรับกู้รหัสผ่าน)" class="w-full p-4 rounded-2xl text-sm">
+                    <input type="password" id="auth-pass" placeholder="Password (6 ตัวขึ้นไป)" class="w-full p-4 rounded-2xl text-sm">
+                    <input type="password" id="auth-confirm" placeholder="Confirm Password" class="w-full p-4 rounded-2xl text-sm">
+                </div>
+
+                <div id="login-fields">
+                    <input type="password" id="auth-login-pass" placeholder="Password" class="w-full p-4 rounded-2xl text-sm">
+                </div>
+
+                <button onclick="handleAuth()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest mt-2 active:scale-95 transition">ตกลง</button>
                 
                 <p class="text-center text-xs text-gray-500 mt-4">
                     <span id="toggle-text">ยังไม่มีบัญชี?</span>
@@ -69,63 +49,44 @@
         </div>
     </div>
 
-    <!-- ส่วนเนื้อหาหลักเมื่อล็อกอินแล้ว -->
-    <div id="main-app" class="hidden">
-        <header class="p-6 flex justify-between items-center border-b border-white/5 sticky top-0 bg-[#060608]/80 backdrop-blur-md">
+    <!-- หน้าหลักหลัง Login -->
+    <div id="main-app" class="hidden p-6">
+        <header class="flex justify-between items-center mb-10">
             <span class="font-black text-xl italic uppercase">OTP<span class="text-purple-500">Shop</span></span>
-            <div class="glass px-4 py-2 rounded-2xl">
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Credit</p>
-                <p class="text-purple-400 font-black" id="balance-display">฿ 0.00</p>
-            </div>
+            <div class="glass px-4 py-2 rounded-2xl text-purple-400 font-black" id="balance-display">฿ 0.00</div>
         </header>
-        
-        <main class="p-6">
-            <div class="glass p-6 rounded-[2rem] text-center mb-6">
-                <p class="text-sm">ผู้ใช้งาน: <span id="user-display" class="font-bold text-purple-500"></span></p>
-            </div>
-            
-            <h3 class="font-bold mb-4">บริการแนะนำ</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass p-6 rounded-[2rem] text-center" onclick="alert('ระบบซื้อยังไม่เปิดใช้งาน')">
-                    <p class="font-bold">Facebook</p>
-                    <p class="text-purple-500">20 THB</p>
-                </div>
-                <div class="glass p-6 rounded-[2rem] text-center" onclick="alert('ระบบซื้อยังไม่เปิดใช้งาน')">
-                    <p class="font-bold">Line</p>
-                    <p class="text-purple-500">20 THB</p>
-                </div>
-            </div>
-
-            <button onclick="firebase.auth().signOut()" class="w-full mt-12 bg-red-500/10 text-red-500 p-4 rounded-2xl font-bold uppercase text-xs border border-red-500/20">ออกจากระบบ</button>
-        </main>
+        <div class="glass p-10 rounded-[2.5rem] text-center">
+            <p class="text-sm mb-2 text-gray-400 italic">ยินดีต้อนรับ</p>
+            <h3 class="text-xl font-bold text-purple-500 mb-8" id="user-display">---</h3>
+            <button onclick="auth.signOut()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-bold uppercase text-[10px] border border-red-500/20 shadow-lg">ออกจากระบบ</button>
+        </div>
     </div>
 
     <script>
-        // *** 1. นำข้อมูลจาก Firebase Console มาวางในช่องว่างด้านล่างนี้ ***
-        const myFirebaseConfig = {
-            apiKey: "", 
-            authDomain: "",
-            projectId: "",
-            storageBucket: "",
-            messagingSenderId: "",
-            appId: ""
+        // ใช้รหัส Config ที่คุณเพิ่งได้มา
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnC_H0mfIJWY_Y73kRFnjtWZvOHIOOopQ",
+            authDomain: "project-otp-shop.firebaseapp.com",
+            projectId: "project-otp-shop",
+            storageBucket: "project-otp-shop.firebasestorage.app",
+            messagingSenderId: "832041026630",
+            appId: "1:832041026630:web:47e06a714d93ff7d58f647",
+            measurementId: "G-Q1XLN31ZJ2"
         };
 
-        // ตรวจสอบ config
-        const config = (myFirebaseConfig.apiKey === "") ? JSON.parse(__firebase_config) : myFirebaseConfig;
-
-        firebase.initializeApp(config);
+        // เริ่มต้นการทำงาน Firebase
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'otp-shop-v2';
+        const appId = "shop-otp-v1"; // ID สำหรับแยกข้อมูลใน Firestore
 
         let isLogin = true;
 
         function toggleMode() {
             isLogin = !isLogin;
             document.getElementById('auth-title').innerText = isLogin ? 'Login' : 'Register';
-            document.getElementById('register-only').classList.toggle('hidden', isLogin);
-            document.getElementById('login-only').classList.toggle('hidden', !isLogin);
+            document.getElementById('reg-fields').classList.toggle('hidden', isLogin);
+            document.getElementById('login-fields').classList.toggle('hidden', !isLogin);
             document.getElementById('toggle-btn').innerText = isLogin ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
             document.getElementById('toggle-text').innerText = isLogin ? 'ยังไม่มีบัญชี?' : 'มีบัญชีอยู่แล้ว?';
         }
@@ -136,22 +97,22 @@
 
             try {
                 if(isLogin) {
-                    const password = document.getElementById('auth-login-password').value;
-                    // ล็อกอินผ่าน Email จำลองที่สร้างจาก Username
-                    await auth.signInWithEmailAndPassword(`${username}@internal.otp`, password);
+                    const password = document.getElementById('auth-login-pass').value;
+                    // ล็อกอินผ่านอีเมลจำลอง (Username-Based)
+                    await auth.signInWithEmailAndPassword(`${username}@shop.internal`, password);
                 } else {
                     const email = document.getElementById('auth-email').value.trim();
-                    const password = document.getElementById('auth-reg-password').value;
-                    const confirm = document.getElementById('auth-confirm-password').value;
+                    const password = document.getElementById('auth-pass').value;
+                    const confirmPass = document.getElementById('auth-confirm').value;
 
                     if(!email || !password) return alert('กรุณากรอกข้อมูลให้ครบ');
-                    if(password !== confirm) return alert('รหัสผ่านไม่ตรงกัน');
+                    if(password !== confirmPass) return alert('รหัสผ่านไม่ตรงกัน');
                     if(password.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัว');
 
-                    // 1. สร้างบัญชีด้วย Email จริง (เพื่อกู้คืน)
+                    // 1. สร้างบัญชีอีเมลจริงสำหรับกู้รหัส
                     const res = await auth.createUserWithEmailAndPassword(email, password);
                     
-                    // 2. บันทึกข้อมูลลง Firestore
+                    // 2. บันทึกข้อมูลลงฐานข้อมูล Firestore
                     await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(res.user.uid).set({
                         username: username,
                         recoveryEmail: email,
@@ -159,33 +120,51 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // 3. สร้าง Email จำลองเพื่อให้ล็อกอินด้วย Username ได้
-                    // โดยปกติ Firebase ไม่อนุญาตให้ล็อกอินด้วย Username ตรงๆ จึงต้องใช้วิธี Email จำลอง
-                    // หากสมัครไม่ได้ ให้เช็คที่หน้า Firebase ว่าเปิด Email/Password หรือยัง
-                    alert('สมัครสมาชิกสำเร็จ!');
+                    // 3. สร้างทางลัดสำหรับการล็อกอินด้วย Username
+                    try { await auth.createUserWithEmailAndPassword(`${username}@shop.internal`, password); } catch(e){}
+                    
+                    alert('สมัครสมาชิกสำเร็จแล้ว!');
                 }
             } catch (err) {
                 console.error(err);
-                alert('เกิดข้อผิดพลาด: ' + err.message);
+                if(err.code === 'auth/email-already-in-use') alert('Username หรือ Email นี้ถูกใช้งานแล้ว');
+                else if(err.code === 'auth/wrong-password') alert('รหัสผ่านไม่ถูกต้อง');
+                else alert('เกิดข้อผิดพลาด: ' + err.message);
             }
         }
 
+        // ฟังการเปลี่ยนแปลงสถานะล็อกอิน
         auth.onAuthStateChanged(user => {
-            if(user) {
-                document.getElementById('auth-layer').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
+            const authLayer = document.getElementById('auth-layer');
+            const mainApp = document.getElementById('main-app');
+
+            if (user) {
+                authLayer.classList.add('hidden');
+                mainApp.classList.remove('hidden');
                 
+                // ดึงข้อมูล User จาก Firestore
                 db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(user.uid)
                 .onSnapshot(doc => {
                     if(doc.exists) {
                         const data = doc.data();
                         document.getElementById('user-display').innerText = data.username;
                         document.getElementById('balance-display').innerText = `฿ ${data.balance.toFixed(2)}`;
+                    } else {
+                        // กรณีเป็นบัญชีจำลอง (Username-based) ให้ค้นหาข้อมูลจริง
+                        db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users')
+                        .where('username', '==', user.email.split('@')[0])
+                        .get().then(snap => {
+                            if(!snap.empty) {
+                                const data = snap.docs[0].data();
+                                document.getElementById('user-display').innerText = data.username;
+                                document.getElementById('balance-display').innerText = `฿ ${data.balance.toFixed(2)}`;
+                            }
+                        });
                     }
                 });
             } else {
-                document.getElementById('auth-layer').classList.remove('hidden');
-                document.getElementById('main-app').classList.add('hidden');
+                authLayer.classList.remove('hidden');
+                mainApp.classList.add('hidden');
             }
         });
     </script>
