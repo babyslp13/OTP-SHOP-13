@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTPSHOP - Premium Service with Inbox</title>
+    <!-- นำเข้า Tailwind CSS สำหรับดีไซน์ที่สวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap');
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #0d0d12;
+            color: white;
+            user-select: none;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-active {
+            color: #a855f7;
+            transform: scale(1.1);
+        }
+        .service-card:active {
+            transform: scale(0.95);
+        }
+        .otp-badge {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen relative pb-28">
+
+    <!-- Header -->
+    <header class="p-6 sticky top-0 bg-[#0d0d12]/90 backdrop-blur-xl z-50 flex justify-between items-center border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div class="bg-purple-600 p-2 rounded-xl shadow-lg shadow-purple-900/40">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+            </div>
+            <span class="font-black text-xl italic tracking-tighter">OTP<span class="text-purple-500">SHOP</span></span>
+        </div>
+        <div class="glass px-4 py-2 rounded-2xl flex items-center gap-3 border border-purple-500/20">
+            <div class="text-right">
+                <p class="text-[9px] text-gray-500 font-bold uppercase">เครดิตคงเหลือ</p>
+                <p class="text-purple-400 font-black" id="balanceDisplay">฿ 100.00</p>
+            </div>
+            <div class="text-purple-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="content" class="p-6">
+        
+        <!-- หน้าแรก: เลือกซื้อเบอร์ -->
+        <div id="page-shop" class="space-y-6">
+            <div class="bg-gradient-to-br from-purple-700 to-indigo-900 p-8 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-black italic">HOT DEALS!</h2>
+                    <p class="text-white/70 text-sm mt-1">รับรหัสรวดเร็ว ภายใน 1 นาที</p>
+                    <button class="mt-4 bg-white text-purple-900 font-bold px-5 py-2 rounded-xl text-xs shadow-lg">ดูโปรโมชั่น</button>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-lg flex items-center gap-2">
+                <span class="w-1 h-6 bg-purple-500 rounded-full"></span>
+                เลือกแอปพลิเคชัน
+            </h3>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 transition-all" onclick="openBuyModal('Facebook', 'https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" class="w-10 h-10" alt="FB">
+                    <p class="font-bold text-sm">Facebook</p>
+                    <p class="text-purple-500 font-black text-xs italic">20 THB</p>
+                </div>
+                <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 transition-all" onclick="openBuyModal('Line', 'https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-10 h-10" alt="Line">
+                    <p class="font-bold text-sm">Line</p>
+                    <p class="text-purple-500 font-black text-xs italic">20 THB</p>
+                </div>
+                <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 transition-all" onclick="openBuyModal('TikTok', 'https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg')">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" class="w-10 h-10 invert" alt="TikTok">
+                    <p class="font-bold text-sm">TikTok</p>
+                    <p class="text-purple-500 font-black text-xs italic">20 THB</p>
+                </div>
+                <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 transition-all" onclick="openBuyModal('Instagram', 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" class="w-10 h-10" alt="IG">
+                    <p class="font-bold text-sm">Instagram</p>
+                    <p class="text-purple-500 font-black text-xs italic">20 THB</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- หน้ากล่องจดหมาย (Inbox) -->
+        <div id="page-inbox" class="hidden space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+                <span class="w-1 h-6 bg-purple-500 rounded-full"></span>
+                กล่องข้อความ OTP
+            </h3>
+            
+            <div id="inbox-list" class="space-y-4">
+                <!-- รายการจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                <div id="empty-inbox" class="text-center py-20 text-gray-600">
+                    <div class="text-5xl mb-4">📩</div>
+                    <p>ยังไม่มีรายการซื้อในขณะนี้</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- หน้าโปรไฟล์ -->
+        <div id="page-profile" class="hidden space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+            <div class="glass p-8 rounded-[2.5rem] text-center border border-purple-500/10">
+                <div class="w-20 h-20 bg-gradient-to-tr from-purple-600 to-indigo-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <h3 class="font-black text-xl italic uppercase tracking-wider">MEMBER #8829</h3>
+                <p class="text-purple-500 font-bold text-sm">สถานะ: ปกติ</p>
+            </div>
+            
+            <div class="bg-red-500/10 border border-red-500/30 p-5 rounded-3xl flex items-start gap-4 cursor-pointer active:scale-95 transition" onclick="alert('กำลังนำท่านไปยังแอดมิน...')">
+                <div class="bg-red-500 p-2 rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div>
+                    <h4 class="text-red-500 font-bold text-sm">แจ้งบัญชีโดนอายัด</h4>
+                    <p class="text-[11px] text-gray-400 mt-1">หากพบปัญหาการเติมเงินหรืออายัดบัญชี คลิกที่นี่</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navbar -->
+    <nav class="fixed bottom-6 left-6 right-6 h-20 bg-black/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 flex items-center justify-around px-2 shadow-2xl z-[100]">
+        <button onclick="showPage('shop')" id="nav-shop" class="flex flex-col items-center gap-1 nav-active transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            <span class="text-[9px] font-black uppercase italic">SHOP</span>
+        </button>
+        <button onclick="showPage('inbox')" id="nav-inbox" class="flex flex-col items-center gap-1 text-gray-500 transition-all relative">
+            <div id="notif-dot" class="hidden absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-black"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span class="text-[9px] font-black uppercase italic">INBOX</span>
+        </button>
+        <button onclick="showPage('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-500 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="text-[9px] font-black uppercase italic">ME</span>
+        </button>
+    </nav>
+
+    <!-- Modal ยืนยันการซื้อ -->
+    <div id="buyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-6">
+        <div class="glass p-8 rounded-[2.5rem] w-full max-w-xs text-center border border-white/10 shadow-2xl">
+            <img id="modalIcon" src="" class="w-16 h-16 mx-auto mb-4" alt="">
+            <h3 class="text-xl font-bold mb-2">ยืนยันการซื้อ</h3>
+            <p id="modalText" class="text-sm text-gray-400 mb-6"></p>
+            <button id="confirmBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:scale-95 transition p-4 rounded-2xl font-black mb-3">ชำระเงิน 20.-</button>
+            <button class="w-full text-gray-500 text-sm font-bold" onclick="closeModal()">ยกเลิก</button>
+        </div>
+    </div>
+
+    <script>
+        let balance = 100.00;
+        let purchaseHistory = [];
+
+        function showPage(pageId) {
+            ['shop', 'inbox', 'profile'].forEach(id => {
+                document.getElementById('page-' + id).classList.add('hidden');
+                document.getElementById('nav-' + id).classList.remove('nav-active', 'text-purple-500');
+                document.getElementById('nav-' + id).classList.add('text-gray-500');
+            });
+
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            document.getElementById('nav-' + pageId).classList.add('nav-active', 'text-purple-500');
+            document.getElementById('nav-' + pageId).classList.remove('text-gray-500');
+
+            if(pageId === 'inbox') {
+                document.getElementById('notif-dot').classList.add('hidden');
+            }
+        }
+
+        function openBuyModal(appName, icon) {
+            document.getElementById('modalIcon').src = icon;
+            document.getElementById('modalText').innerText = `คุณกำลังจะซื้อบริการ OTP สำหรับ ${appName}`;
+            document.getElementById('buyModal').classList.remove('hidden');
+            document.getElementById('confirmBtn').onclick = () => processPurchase(appName, icon);
+        }
+
+        function closeModal() {
+            document.getElementById('buyModal').classList.add('hidden');
+        }
+
+        function processPurchase(appName, icon) {
+            if (balance < 20) {
+                alert('เครดิตไม่เพียงพอ!');
+                closeModal();
+                return;
+            }
+
+            // หักเงิน
+            balance -= 20;
+            document.getElementById('balanceDisplay').innerText = `฿ ${balance.toFixed(2)}`;
+            
+            // สร้างรายการใน Inbox
+            const purchaseId = Date.now();
+            const newPurchase = {
+                id: purchaseId,
+                app: appName,
+                icon: icon,
+                number: '+66 0' + Math.floor(Math.random() * 90000000 + 10000000),
+                otp: null,
+                time: new Date().toLocaleTimeString('th-TH')
+            };
+
+            purchaseHistory.unshift(newPurchase);
+            updateInboxUI();
+            closeModal();
+            showPage('inbox');
+
+            // จำลองการได้รับ OTP หลังจาก 3-5 วินาที
+            setTimeout(() => {
+                const otp = Math.floor(Math.random() * 900000 + 100000);
+                const item = purchaseHistory.find(p => p.id === purchaseId);
+                if (item) {
+                    item.otp = otp;
+                    updateInboxUI();
+                    if(document.getElementById('page-inbox').classList.contains('hidden')) {
+                        document.getElementById('notif-dot').classList.remove('hidden');
+                    }
+                }
+            }, 3000);
+        }
+
+        function updateInboxUI() {
+            const list = document.getElementById('inbox-list');
+            const empty = document.getElementById('empty-inbox');
+            
+            if (purchaseHistory.length > 0) {
+                empty.classList.add('hidden');
+                list.innerHTML = '';
+                purchaseHistory.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "glass p-5 rounded-3xl border border-white/5 flex items-center justify-between";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <img src="${item.icon}" class="w-10 h-10 ${item.app === 'TikTok' ? 'invert' : ''}" alt="">
+                            <div>
+                                <h4 class="font-bold text-sm">${item.app}</h4>
+                                <p class="text-[10px] text-purple-400 font-mono">${item.number}</p>
+                                <p class="text-[9px] text-gray-500">${item.time}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] text-gray-500 font-bold uppercase mb-1">OTP Code</p>
+                            ${item.otp 
+                                ? `<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg font-black tracking-widest text-lg">${item.otp}</span>`
+                                : `<span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg font-bold text-xs otp-badge">รอข้อความ...</span>`
+                            }
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            } else {
+                empty.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
+
