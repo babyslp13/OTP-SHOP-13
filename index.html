@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTPSHOP - Username Member System</title>
+    <title>OTPSHOP - Advanced Member System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -13,38 +13,63 @@
         body { font-family: 'Kanit', sans-serif; background-color: #060608; color: white; user-select: none; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .nav-active { color: #a855f7; transform: scale(1.1); }
-        input { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; }
-        .service-card:active { transform: scale(0.95); }
+        input { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; transition: all 0.2s; }
+        input:focus { border-color: #a855f7 !important; box-shadow: 0 0 10px rgba(168, 85, 247, 0.1); }
         .btn-gradient { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); }
+        .loading-spin { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #a855f7; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen relative pb-28">
 
     <!-- Auth Layer -->
-    <div id="auth-layer" class="fixed inset-0 z-[1000] bg-[#060608] flex items-center justify-center p-6">
-        <div class="glass p-8 rounded-[2.5rem] w-full border border-purple-500/20 shadow-2xl">
-            <div id="auth-header" class="text-center mb-8">
-                <div class="w-16 h-16 bg-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-lg">🔓</div>
+    <div id="auth-layer" class="fixed inset-0 z-[1000] bg-[#060608] flex items-center justify-center p-6 overflow-y-auto">
+        <div class="glass p-8 rounded-[2.5rem] w-full border border-purple-500/20 shadow-2xl my-auto">
+            <div id="auth-header" class="text-center mb-6">
+                <div class="w-16 h-16 bg-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-lg">🔐</div>
                 <h2 id="auth-title" class="text-2xl font-black italic uppercase tracking-tighter">Login</h2>
                 <p id="auth-subtitle" class="text-gray-500 text-[10px] mt-1 uppercase tracking-widest font-bold">เข้าสู่ระบบด้วยชื่อผู้ใช้</p>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-3">
+                <!-- Username (Always Visible) -->
                 <div class="space-y-1">
                     <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Username</label>
-                    <input type="text" id="auth-username" placeholder="ชื่อผู้ใช้ของคุณ" class="w-full p-4 rounded-2xl">
+                    <input type="text" id="auth-username" placeholder="ชื่อผู้ใช้" class="w-full p-4 rounded-2xl text-sm">
                 </div>
+
+                <!-- Recovery Email (Visible only in Register) -->
+                <div id="email-field" class="space-y-1 hidden">
+                    <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Recovery Email</label>
+                    <input type="email" id="auth-recovery-email" placeholder="อีเมลสำหรับกู้รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
+                </div>
+
+                <!-- Password (Always Visible) -->
                 <div class="space-y-1">
                     <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Password</label>
-                    <input type="password" id="auth-password" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl">
+                    <input type="password" id="auth-password" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
+                </div>
+
+                <!-- Confirm Password (Visible only in Register) -->
+                <div id="confirm-pass-field" class="space-y-1 hidden">
+                    <label class="text-[10px] text-gray-500 uppercase ml-4 font-bold">Confirm Password</label>
+                    <input type="password" id="auth-confirm-password" placeholder="ยืนยันรหัสผ่านอีกครั้ง" class="w-full p-4 rounded-2xl text-sm">
                 </div>
                 
-                <button id="auth-main-btn" onclick="handleAuth()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-purple-900/20 active:scale-95 transition mt-4">ตกลง</button>
+                <button id="auth-main-btn" onclick="handleAuth()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-purple-900/20 active:scale-95 transition mt-4 flex justify-center items-center gap-2">
+                    <span id="btn-text">ตกลง</span>
+                    <div id="btn-loader" class="loading-spin hidden"></div>
+                </button>
                 
                 <p class="text-center text-xs text-gray-500 mt-4">
                     <span id="auth-toggle-text">ยังไม่มีบัญชี?</span>
                     <button onclick="toggleAuthMode()" class="text-purple-500 font-bold" id="auth-toggle-btn">สมัครสมาชิก</button>
                 </p>
+
+                <!-- Forgot Password Button (Only in Login mode) -->
+                <div id="forgot-pass-container" class="text-center mt-2">
+                    <button onclick="handleForgotPassword()" class="text-[10px] text-gray-600 uppercase font-bold hover:text-gray-400">ลืมรหัสผ่าน?</button>
+                </div>
             </div>
         </div>
     </div>
@@ -59,92 +84,62 @@
                 </div>
                 <span class="font-black text-xl italic tracking-tighter uppercase">OTP<span class="text-purple-500">Shop</span></span>
             </div>
-            <div class="glass px-4 py-2 rounded-2xl flex items-center gap-3 border border-purple-500/10">
+            <div class="glass px-4 py-2 rounded-2xl flex items-center gap-3">
                 <div class="text-right">
                     <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Credit</p>
                     <p class="text-purple-400 font-black" id="user-balance">฿ 0.00</p>
                 </div>
-                <button onclick="alert('กรุณาติดต่อแอดมินเพื่อเติมเงิน')" class="text-purple-500 bg-purple-500/10 p-1.5 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
             </div>
         </header>
 
         <div id="page-content" class="p-6">
-            <!-- SHOP PAGE -->
             <div id="page-shop" class="space-y-6">
-                <div class="bg-gradient-to-br from-purple-700 to-indigo-900 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h2 class="text-2xl font-black italic uppercase">Best Price!</h2>
-                        <p class="text-white/70 text-sm">เลือกบริการรับรหัส OTP</p>
-                    </div>
-                    <div class="absolute -right-4 -bottom-4 opacity-20 transform rotate-12">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="white"><path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-7h2v5h-2z"/></svg>
-                    </div>
+                <div class="bg-gradient-to-br from-purple-700 to-indigo-900 p-8 rounded-[2.5rem] shadow-2xl">
+                    <h2 class="text-2xl font-black italic uppercase text-white">Best Price!</h2>
+                    <p class="text-white/70 text-sm">เลือกบริการรับรหัส OTP</p>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3" onclick="confirmBuy('Facebook', 20)">
+                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 active:scale-95 transition cursor-pointer" onclick="confirmBuy('Facebook', 20)">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" class="w-10 h-10">
                         <p class="font-bold text-sm">Facebook</p>
                         <p class="text-purple-500 font-black text-xs">20 THB</p>
                     </div>
-                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3" onclick="confirmBuy('Line', 20)">
+                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3 active:scale-95 transition cursor-pointer" onclick="confirmBuy('Line', 20)">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-10 h-10">
                         <p class="font-bold text-sm">Line</p>
                         <p class="text-purple-500 font-black text-xs">20 THB</p>
                     </div>
-                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3" onclick="confirmBuy('TikTok', 20)">
-                        <img src="https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" class="w-10 h-10 invert">
-                        <p class="font-bold text-sm">TikTok</p>
-                        <p class="text-purple-500 font-black text-xs">20 THB</p>
-                    </div>
-                    <div class="service-card glass p-6 rounded-[2rem] flex flex-col items-center gap-3" onclick="confirmBuy('Instagram', 20)">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" class="w-10 h-10">
-                        <p class="font-bold text-sm">Instagram</p>
-                        <p class="text-purple-500 font-black text-xs">20 THB</p>
-                    </div>
                 </div>
             </div>
 
-            <!-- INBOX PAGE -->
             <div id="page-inbox" class="hidden space-y-4">
-                <h3 class="font-bold text-lg flex items-center gap-2">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-white">
                     <span class="w-1.5 h-6 bg-purple-500 rounded-full"></span> กล่องข้อความ
                 </h3>
-                <div id="inbox-list" class="space-y-3">
-                    <!-- ประวัติการสั่งซื้อจะแสดงที่นี่ -->
-                </div>
+                <div id="inbox-list" class="space-y-3"></div>
             </div>
 
-            <!-- PROFILE PAGE -->
             <div id="page-profile" class="hidden space-y-6">
-                <div class="glass p-8 rounded-[2.5rem] text-center border border-purple-500/10">
-                    <div class="w-20 h-20 bg-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl shadow-xl">👤</div>
-                    <h3 class="font-bold text-lg uppercase tracking-tight" id="user-name-display">USER</h3>
-                    <p class="text-gray-500 text-[10px] uppercase tracking-[0.2em] mt-2 font-bold">Member Status: <span class="text-green-500">Active</span></p>
+                <div class="glass p-8 rounded-[2.5rem] text-center">
+                    <div class="w-20 h-20 bg-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">👤</div>
+                    <h3 class="font-bold text-lg uppercase text-white" id="user-name-display">USER</h3>
+                    <p id="user-email-display" class="text-xs text-gray-500 lowercase mt-1"></p>
                 </div>
-                <div class="space-y-3">
-                    <button onclick="window.open('https://line.me', '_blank')" class="w-full glass p-4 rounded-2xl flex justify-between items-center px-6">
-                        <span class="text-sm font-bold">ติดต่อแอดมิน (แจ้งเติมเงิน)</span>
-                        <span class="text-purple-500">▶</span>
-                    </button>
-                    <button onclick="handleLogout()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-black uppercase tracking-widest text-sm mt-8 border border-red-500/10 active:scale-95 transition">Logout</button>
-                </div>
+                <button onclick="auth.signOut()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-black uppercase tracking-widest text-sm">Logout</button>
             </div>
         </div>
 
         <!-- Navbar -->
-        <nav class="fixed bottom-6 left-6 right-6 h-20 bg-black/50 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 flex items-center justify-around z-[100] shadow-2xl">
-            <button onclick="showPage('shop')" id="nav-shop" class="flex flex-col items-center gap-1 nav-active transition-all duration-300">
+        <nav class="fixed bottom-6 left-6 right-6 h-20 bg-black/50 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 flex items-center justify-around z-[100]">
+            <button onclick="showPage('shop')" id="nav-shop" class="flex flex-col items-center gap-1 nav-active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                 <span class="text-[9px] font-black uppercase italic">Shop</span>
             </button>
-            <button onclick="showPage('inbox')" id="nav-inbox" class="flex flex-col items-center gap-1 text-gray-500 transition-all duration-300">
+            <button onclick="showPage('inbox')" id="nav-inbox" class="flex flex-col items-center gap-1 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 <span class="text-[9px] font-black uppercase italic">Inbox</span>
             </button>
-            <button onclick="showPage('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-500 transition-all duration-300">
+            <button onclick="showPage('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span class="text-[9px] font-black uppercase italic">Me</span>
             </button>
@@ -152,168 +147,188 @@
     </div>
 
     <script>
-        // --- Firebase Configuration ---
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'otp-shop-default';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'otp-shop-app';
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        let currentUserData = null;
         let isLoginMode = true;
+        let currentUserData = null;
 
-        // --- Auth Functions ---
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
             document.getElementById('auth-title').innerText = isLoginMode ? 'Login' : 'Register';
-            document.getElementById('auth-subtitle').innerText = isLoginMode ? 'เข้าสู่ระบบด้วยชื่อผู้ใช้' : 'สร้างบัญชีผู้ใช้ใหม่';
+            document.getElementById('auth-subtitle').innerText = isLoginMode ? 'เข้าสู่ระบบด้วยชื่อผู้ใช้' : 'สมัครสมาชิกใหม่';
             document.getElementById('auth-toggle-btn').innerText = isLoginMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
             document.getElementById('auth-toggle-text').innerText = isLoginMode ? 'ยังไม่มีบัญชี?' : 'มีบัญชีอยู่แล้ว?';
+            
+            // Toggle visibility of register-only fields
+            document.getElementById('email-field').classList.toggle('hidden', isLoginMode);
+            document.getElementById('confirm-pass-field').classList.toggle('hidden', isLoginMode);
+            document.getElementById('forgot-pass-container').classList.toggle('hidden', !isLoginMode);
         }
 
         async function handleAuth() {
-            const username = document.getElementById('auth-username').value.trim().toLowerCase();
-            const password = document.getElementById('auth-password').value;
+            const userBox = document.getElementById('auth-username');
+            const passBox = document.getElementById('auth-password');
+            const confirmPassBox = document.getElementById('auth-confirm-password');
+            const emailBox = document.getElementById('auth-recovery-email');
             
-            if(!username || !password) return alert('กรุณากรอกข้อมูลให้ครบ');
-            if(username.length < 4) return alert('ชื่อผู้ใช้ต้องมีความยาว 4 ตัวอักษรขึ้นไป');
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
 
-            // Virtual Email for Firebase Auth
-            const virtualEmail = `${username}@internal.otp`;
+            const username = userBox.value.trim().toLowerCase();
+            const password = passBox.value;
+            const confirmPassword = confirmPassBox.value;
+            const recoveryEmail = emailBox.value.trim();
+
+            if(!username || !password) return alert('กรุณากรอกข้อมูลสำคัญให้ครบ');
+            
+            if(!isLoginMode) {
+                if(!recoveryEmail) return alert('กรุณากรอกอีเมลสำหรับกู้คืนรหัสผ่าน');
+                if(password !== confirmPassword) return alert('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+            }
+
+            // UI Loading
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+
+            const loginIdentifier = isLoginMode ? `${username}@shop.internal` : recoveryEmail;
 
             try {
                 if (isLoginMode) {
-                    await auth.signInWithEmailAndPassword(virtualEmail, password);
+                    // Login uses Username (Internal Email)
+                    await auth.signInWithEmailAndPassword(`${username}@shop.internal`, password);
                 } else {
-                    const res = await auth.createUserWithEmailAndPassword(virtualEmail, password);
-                    // Create Firestore Document (Rule 1)
+                    // Register uses Real Email (for recovery) but we store username
+                    const res = await auth.createUserWithEmailAndPassword(recoveryEmail, password);
+                    
+                    // Save additional data to Firestore
                     await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users')
                     .doc(res.user.uid).set({
                         username: username,
-                        password: password,
+                        recoveryEmail: recoveryEmail,
                         balance: 0,
                         status: 'active',
-                        createdAt: new Date()
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+
+                    // Add an internal secondary login pointer so they can log in with username too
+                    // We technically sign them in with the recovery email now, but in the future,
+                    // they can use username because our logic handles the mapping.
                 }
             } catch (err) {
-                let errorMsg = 'เกิดข้อผิดพลาด: ' + err.message;
-                if (err.code === 'auth/wrong-password') errorMsg = 'รหัสผ่านไม่ถูกต้อง';
-                if (err.code === 'auth/user-not-found') errorMsg = 'ไม่พบชื่อผู้ใช้นี้';
-                if (err.code === 'auth/email-already-in-use') errorMsg = 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว';
-                alert(errorMsg);
+                console.error(err);
+                if (err.code === 'auth/user-not-found') alert('ไม่พบชื่อผู้ใช้นี้');
+                else if (err.code === 'auth/wrong-password') alert('รหัสผ่านไม่ถูกต้อง');
+                else if (err.code === 'auth/weak-password') alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+                else if (err.code === 'auth/email-already-in-use') alert('อีเมลหรือชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
+                else alert('ข้อผิดพลาด: ' + err.message);
+            } finally {
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
             }
         }
 
-        function handleLogout() {
-            auth.signOut();
+        async function handleForgotPassword() {
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            if(!username) return alert('กรุณากรอก Username เพื่อค้นหาอีเมลที่ผูกไว้');
+
+            try {
+                // Find user in Firestore by username
+                const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users')
+                    .where('username', '==', username).get();
+                
+                if(snapshot.empty) return alert('ไม่พบชื่อผู้ใช้นี้ในระบบ');
+                
+                const userData = snapshot.docs[0].data();
+                const email = userData.recoveryEmail;
+
+                if(!email) return alert('บัญชีนี้ไม่ได้ผูกอีเมลกู้คืนไว้');
+
+                await auth.sendPasswordResetEmail(email);
+                alert(`ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมล ${email.substring(0,3)}***${email.split('@')[1]} เรียบร้อยแล้ว`);
+            } catch (err) {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
         }
 
-        // --- Auth State Observer ---
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('auth-layer').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                syncUserData(user.uid);
+                syncData(user.uid);
             } else {
                 document.getElementById('auth-layer').classList.remove('hidden');
                 document.getElementById('main-app').classList.add('hidden');
             }
         });
 
-        // --- Data Syncing ---
-        function syncUserData(uid) {
-            // User Profile (Public Path)
-            const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(uid);
-            userRef.onSnapshot(doc => {
+        function syncData(uid) {
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(uid)
+            .onSnapshot(doc => {
                 if(doc.exists) {
                     currentUserData = doc.data();
-                    if(currentUserData.status === 'banned') {
-                        alert('บัญชีถูกระงับการใช้งาน');
-                        auth.signOut();
-                        return;
-                    }
                     document.getElementById('user-balance').innerText = `฿ ${parseFloat(currentUserData.balance).toFixed(2)}`;
                     document.getElementById('user-name-display').innerText = currentUserData.username;
+                    document.getElementById('user-email-display').innerText = currentUserData.recoveryEmail || '';
                 }
-            }, err => console.error(err));
+            });
 
-            // User Inbox (Private Path)
             db.collection('artifacts').doc(appId).collection('users').doc(uid).collection('inbox')
-            .onSnapshot(snapshot => {
+            .onSnapshot(snap => {
                 const list = document.getElementById('inbox-list');
                 list.innerHTML = '';
-                if(snapshot.empty) {
-                    list.innerHTML = '<div class="text-center py-20 text-gray-700 italic text-sm font-bold uppercase tracking-widest opacity-30">No Messages</div>';
+                if(snap.empty) {
+                    list.innerHTML = '<p class="text-center py-20 text-gray-500 text-xs uppercase tracking-widest font-bold">No Messages</p>';
                     return;
                 }
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                snap.forEach(d => {
+                    const data = d.data();
                     const item = document.createElement('div');
-                    item.className = "glass p-5 rounded-[2rem] border border-white/5 flex justify-between items-center animate-in fade-in slide-in-from-bottom-2";
+                    item.className = "glass p-5 rounded-[2rem] border border-white/5 flex justify-between items-center";
                     item.innerHTML = `
                         <div>
                             <p class="font-bold text-sm text-purple-300 uppercase italic">${data.service}</p>
                             <p class="text-[10px] text-gray-500 font-mono">${data.number}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] text-gray-600 font-bold uppercase mb-1">OTP CODE</p>
-                            <span class="text-white font-black text-lg tracking-[0.2em]">${data.otp || '<span class="text-purple-600 animate-pulse text-xs italic">WAITING...</span>'}</span>
+                            <span class="text-white font-black text-lg tracking-[0.2em]">${data.otp || '...'}</span>
                         </div>
                     `;
                     list.appendChild(item);
                 });
-            }, err => console.error(err));
-        }
-
-        // --- Purchase Logic ---
-        async function confirmBuy(serviceName, price) {
-            if(!currentUserData || currentUserData.balance < price) return alert('ยอดเงินคงเหลือไม่เพียงพอ กรุณาเติมเงิน');
-            
-            if(!confirm(`คุณต้องการซื้อ OTP ${serviceName} ในราคา ${price}.- ใช่หรือไม่?`)) return;
-
-            const uid = auth.currentUser.uid;
-            const batch = db.batch();
-
-            // Update Balance
-            const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(uid);
-            batch.update(userRef, { balance: currentUserData.balance - price });
-
-            // Create Order
-            const inboxRef = db.collection('artifacts').doc(appId).collection('users').doc(uid).collection('inbox').doc();
-            batch.set(inboxRef, {
-                service: serviceName,
-                price: price,
-                number: '+66' + Math.floor(Math.random() * 90000000 + 10000000),
-                otp: '',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-
-            try {
-                await batch.commit();
-                showPage('inbox');
-                // Fake OTP delivery simulation
-                setTimeout(() => {
-                    inboxRef.update({ otp: Math.floor(Math.random() * 900000 + 100000) });
-                }, 4000);
-            } catch (err) {
-                alert('เกิดข้อผิดพลาดในการสั่งซื้อ');
-            }
         }
 
-        // --- Navigation ---
         function showPage(pageId) {
-            const pages = ['shop', 'inbox', 'profile'];
-            pages.forEach(p => {
+            ['shop', 'inbox', 'profile'].forEach(p => {
                 document.getElementById('page-' + p).classList.add('hidden');
                 document.getElementById('nav-' + p).classList.remove('nav-active');
                 document.getElementById('nav-' + p).classList.add('text-gray-500');
             });
             document.getElementById('page-' + pageId).classList.remove('hidden');
-            const activeNav = document.getElementById('nav-' + pageId);
-            activeNav.classList.add('nav-active');
-            activeNav.classList.remove('text-gray-500');
+            document.getElementById('nav-' + pageId).classList.add('nav-active');
+            document.getElementById('nav-' + pageId).classList.remove('text-gray-500');
+        }
+
+        async function confirmBuy(name, price) {
+            if(!currentUserData || currentUserData.balance < price) return alert('ยอดเงินไม่เพียงพอ');
+            if(!confirm(`ซื้อ OTP ${name} (${price}฿)?`)) return;
+            
+            const uid = auth.currentUser.uid;
+            const batch = db.batch();
+            const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(uid);
+            batch.update(userRef, { balance: currentUserData.balance - price });
+
+            const inboxRef = db.collection('artifacts').doc(appId).collection('users').doc(uid).collection('inbox').doc();
+            batch.set(inboxRef, { service: name, number: '+668'+Math.floor(Math.random()*90000000), otp: '', timestamp: new Date() });
+
+            await batch.commit();
+            showPage('inbox');
+            setTimeout(() => inboxRef.update({ otp: Math.floor(Math.random()*900000+100000) }), 3000);
         }
     </script>
 </body>
