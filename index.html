@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTPSHOP - Admin System</title>
+    <title>OTPSHOP - Ultimate Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -11,37 +11,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap');
-        body { font-family: 'Kanit', sans-serif; background-color: #060608; color: white; margin: 0; padding-bottom: 90px; }
+        body { font-family: 'Kanit', sans-serif; background-color: #060608; color: white; margin: 0; padding-bottom: 90px; overflow-x: hidden; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .btn-gradient { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); }
         .nav-item { color: #666; transition: 0.3s; }
         .nav-item.active { color: #a855f7; }
-        input { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; }
+        input, select { background: #111118 !important; border: 1px solid #333 !important; color: white !important; outline: none; }
         .hidden { display: none !important; }
+        .admin-border { border: 1px solid rgba(234, 179, 8, 0.3); }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen">
 
-    <!-- ส่วนล็อกอิน -->
+    <!-- Authentication Overlay -->
     <div id="auth-layer" class="fixed inset-0 z-[2000] bg-[#060608] flex items-center justify-center p-6 hidden">
         <div class="glass p-8 rounded-[2.5rem] w-full border border-purple-500/20">
-            <h2 id="auth-title" class="text-2xl font-black italic uppercase text-center mb-6 text-purple-500">Login</h2>
+            <h2 id="auth-title" class="text-2xl font-black italic uppercase text-center mb-6 text-purple-500 tracking-widest">Login</h2>
             <div class="space-y-4">
-                <input type="text" id="auth-username" placeholder="Username" class="w-full p-4 rounded-2xl text-sm">
+                <input type="text" id="auth-username" placeholder="ชื่อผู้ใช้งาน" class="w-full p-4 rounded-2xl text-sm">
                 <div id="reg-fields" class="hidden space-y-4">
-                    <input type="email" id="auth-email" placeholder="Email" class="w-full p-4 rounded-2xl text-sm">
-                    <input type="password" id="auth-pass" placeholder="Password" class="w-full p-4 rounded-2xl text-sm">
+                    <input type="email" id="auth-email" placeholder="อีเมล (สำหรับสมัครใหม่)" class="w-full p-4 rounded-2xl text-sm">
+                    <input type="password" id="auth-pass" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
                 </div>
                 <div id="login-fields">
-                    <input type="password" id="auth-login-pass" placeholder="Password" class="w-full p-4 rounded-2xl text-sm">
+                    <input type="password" id="auth-login-pass" placeholder="รหัสผ่าน" class="w-full p-4 rounded-2xl text-sm">
                 </div>
                 <button onclick="handleAuth()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest mt-2 active:scale-95 transition">ตกลง</button>
-                <button onclick="toggleMode()" id="toggle-btn" class="w-full text-xs text-gray-500 mt-4 font-bold uppercase">ยังไม่มีบัญชี? สมัครสมาชิก</button>
+                <button onclick="toggleMode()" id="toggle-btn" class="w-full text-xs text-gray-500 mt-4 font-bold uppercase">สมัครสมาชิก</button>
             </div>
         </div>
     </div>
 
-    <!-- ส่วนหลักของแอป -->
+    <!-- App Content -->
     <div id="main-app">
         <header class="p-6 flex justify-between items-center sticky top-0 bg-[#060608]/80 backdrop-blur-md z-50">
             <span class="font-black text-xl italic uppercase tracking-tighter text-white">OTP<span class="text-purple-500">Shop</span></span>
@@ -51,115 +52,115 @@
         </header>
 
         <main class="px-6 space-y-6">
-            <!-- หน้าแรก: รายการสินค้า -->
+            
+            <!-- Home: Product List -->
             <section id="page-home" class="space-y-6">
                 <div class="glass p-5 rounded-[2rem] flex items-center justify-between border border-white/5">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 text-xl border border-purple-500/20">
-                            <i class="fa-solid fa-user-astronaut"></i>
+                            <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest">ยินดีต้อนรับ</p>
-                            <h3 class="font-bold text-lg text-white" id="user-display">---</h3>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest leading-none mb-1">ยินดีต้อนรับ</p>
+                            <h3 class="font-bold text-lg text-white leading-none" id="user-display">---</h3>
                         </div>
                     </div>
-                    <!-- ปุ่มแอดมิน (แสดงเฉพาะเจ้าของ UID ที่ระบุ) -->
-                    <button id="admin-btn" onclick="switchPage('admin')" class="hidden w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/20">
+                    <button id="admin-btn" onclick="switchPage('admin')" class="hidden w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/20 shadow-lg shadow-yellow-500/5">
                         <i class="fa-solid fa-crown"></i>
                     </button>
                 </div>
 
-                <h2 class="font-black italic uppercase text-xs text-purple-500 tracking-widest">รายการสินค้า (Store)</h2>
-                
-                <div class="grid grid-cols-1 gap-4" id="product-container">
-                    <!-- สินค้าตัวอย่าง -->
-                    <div class="glass p-4 rounded-[2rem] flex items-center justify-between border border-white/5">
-                        <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-2xl btn-gradient flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
-                                <i class="fa-solid fa-comment-sms"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-white">บริการรับ OTP (เบอร์ไทย)</h4>
-                                <p class="text-[10px] text-purple-400 font-bold">฿ 5.00 / ครั้ง</p>
-                                <p class="text-[9px] text-gray-500">สถานะ: <span class="text-green-500">พร้อมใช้งาน</span></p>
-                            </div>
-                        </div>
-                        <button onclick="handleBuy('OTP Thai', 5)" class="bg-white/5 hover:bg-purple-500 px-4 py-2 rounded-xl text-[10px] font-bold transition">ซื้อเลย</button>
-                    </div>
+                <div class="flex justify-between items-center">
+                    <h2 class="font-black italic uppercase text-xs text-purple-500 tracking-widest">Store Inventory</h2>
+                </div>
 
-                    <div class="glass p-4 rounded-[2rem] flex items-center justify-between border border-white/5 opacity-50">
-                        <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center text-2xl text-gray-500">
-                                <i class="fa-solid fa-envelope"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-white">Email Account</h4>
-                                <p class="text-[10px] text-purple-400 font-bold">฿ 15.00</p>
-                                <p class="text-[9px] text-red-500">สถานะ: สินค้าหมด</p>
-                            </div>
-                        </div>
-                        <button class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-bold cursor-not-allowed">หมด</button>
-                    </div>
+                <div class="grid grid-cols-1 gap-4" id="product-list">
+                    <!-- สินค้าจะถูกโหลดที่นี่ -->
+                    <div class="text-center py-10 opacity-30 text-xs">กำลังเรียกข้อมูลสินค้า...</div>
                 </div>
             </section>
 
-            <!-- หน้าเติมเงิน -->
-            <section id="page-topup" class="hidden space-y-6">
-                <h2 class="text-xl font-black italic uppercase text-purple-500">เติมเงิน (Topup)</h2>
-                <div class="glass p-6 rounded-[2.5rem] border border-white/5 space-y-4">
-                    <div class="flex items-center gap-3 text-sm text-gray-400 mb-2">
-                        <i class="fa-solid fa-gift text-purple-500"></i>
-                        <span>ซองของขวัญ TrueMoney Wallet</span>
-                    </div>
-                    <input type="text" id="topup-link" placeholder="https://gift.truemoney.com/..." class="w-full p-4 rounded-2xl text-xs">
-                    <button onclick="handleTopup()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-purple-500/20">ยืนยันการเติมเงิน</button>
-                </div>
-            </section>
-
-            <!-- หน้าแอดมิน -->
+            <!-- Admin: Control Panel -->
             <section id="page-admin" class="hidden space-y-6">
-                <h2 class="text-xl font-black italic uppercase text-yellow-500">Admin Dashboard</h2>
-                <div class="glass p-6 rounded-3xl border border-yellow-500/20 space-y-4">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-white/5 pb-2">จัดการยอดเงินผู้ใช้</h4>
-                    <p class="text-[10px] text-gray-500">ระบุ UID ผู้ใช้ที่ต้องการเติมเงิน</p>
-                    <input type="text" id="admin-target-uid" placeholder="User UID" class="w-full p-4 rounded-2xl text-xs text-white">
-                    <input type="number" id="admin-amount" placeholder="จำนวนเงิน (เช่น 50 หรือ -20)" class="w-full p-4 rounded-2xl text-xs text-white">
-                    <button onclick="adminUpdateBalance()" class="w-full bg-yellow-500 text-black p-4 rounded-2xl font-black uppercase text-xs">บันทึกและอัปเดต</button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-black shadow-lg shadow-yellow-500/20">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <h2 class="text-xl font-black italic uppercase text-yellow-500">Admin Control</h2>
+                </div>
+
+                <!-- Wallet Management -->
+                <div class="glass p-6 rounded-3xl admin-border space-y-4">
+                    <h4 class="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Wallet Manager</h4>
+                    <input type="text" id="admin-target-uid" placeholder="User UID" class="w-full p-4 rounded-2xl text-xs">
+                    <input type="number" id="admin-amount" placeholder="จำนวนเงิน (+ หรือ -)" class="w-full p-4 rounded-2xl text-xs">
+                    <button onclick="adminUpdateBalance()" class="w-full bg-yellow-500 text-black p-4 rounded-2xl font-black uppercase text-xs">อัปเดตยอดเงิน</button>
+                </div>
+
+                <!-- Product Management -->
+                <div class="glass p-6 rounded-3xl admin-border space-y-4">
+                    <h4 class="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Add New Product</h4>
+                    <input type="text" id="prod-name" placeholder="ชื่อสินค้า" class="w-full p-4 rounded-2xl text-xs">
+                    <input type="number" id="prod-price" placeholder="ราคา (บาท)" class="w-full p-4 rounded-2xl text-xs">
+                    <select id="prod-status" class="w-full p-4 rounded-2xl text-xs">
+                        <option value="available">พร้อมขาย</option>
+                        <option value="out">สินค้าหมด</option>
+                    </select>
+                    <button onclick="adminAddProduct()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase text-xs">บันทึกสินค้า</button>
                 </div>
             </section>
 
-            <!-- หน้าโปรไฟล์ -->
-            <section id="page-profile" class="hidden space-y-6 text-center">
-                <h2 class="text-xl font-black italic uppercase text-purple-500">Profile</h2>
-                <div class="glass p-10 rounded-[3rem] border border-white/5">
-                    <div class="w-20 h-20 rounded-full bg-purple-500/10 mx-auto mb-4 flex items-center justify-center text-3xl text-purple-500">
-                        <i class="fa-solid fa-id-card"></i>
+            <!-- Topup: Payment -->
+            <section id="page-topup" class="hidden space-y-6">
+                <h2 class="text-xl font-black italic uppercase text-purple-500">เติมเงินผ่านซอง</h2>
+                <div class="glass p-8 rounded-[2.5rem] border border-white/5 space-y-6 text-center">
+                    <div class="w-20 h-20 bg-white/5 rounded-3xl mx-auto flex items-center justify-center text-4xl text-purple-500">
+                        <i class="fa-solid fa-gift"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-white" id="profile-name">---</h3>
-                    <p class="text-[10px] text-gray-500 mt-2 mb-8" id="profile-uid">UID: ---</p>
-                    <button onclick="auth.signOut()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-bold uppercase text-[10px] border border-red-500/20">Logout</button>
+                    <div class="space-y-2">
+                        <input type="text" id="topup-link" placeholder="ลิ้งค์ซองของขวัญ TrueMoney" class="w-full p-4 rounded-2xl text-xs text-center">
+                        <p class="text-[10px] text-gray-500 italic">ตรวจสอบและเติมเข้าบัญชีอัตโนมัติ</p>
+                    </div>
+                    <button onclick="handleTopup()" class="w-full btn-gradient p-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition shadow-lg shadow-purple-500/20">ตรวจสอบยอดเงิน</button>
+                </div>
+            </section>
+
+            <!-- Profile: Settings -->
+            <section id="page-profile" class="hidden space-y-6">
+                <div class="glass p-10 rounded-[3rem] border border-white/5 text-center space-y-4">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 mx-auto flex items-center justify-center text-4xl shadow-2xl shadow-purple-500/30">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white" id="profile-name">---</h3>
+                        <p class="text-[10px] text-gray-500 mt-1 select-all" id="profile-uid">UID: ---</p>
+                    </div>
+                    <div class="pt-6">
+                        <button onclick="auth.signOut()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-bold uppercase text-[10px] border border-red-500/20 active:scale-95 transition">Logout</button>
+                    </div>
                 </div>
             </section>
         </main>
 
-        <!-- Navigation Bar -->
+        <!-- Bottom Navigation -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-[85px] glass border-t border-white/5 flex justify-around items-center px-8 z-50 rounded-t-[2.5rem]">
             <button onclick="switchPage('home')" class="nav-item flex flex-col items-center gap-1 active" id="nav-home">
-                <i class="fa-solid fa-store text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">ร้านค้า</span>
+                <i class="fa-solid fa-house-chimney text-lg"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Home</span>
             </button>
             <button onclick="switchPage('topup')" class="nav-item flex flex-col items-center gap-1" id="nav-topup">
                 <i class="fa-solid fa-wallet text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">เติมเงิน</span>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Topup</span>
             </button>
             <button onclick="switchPage('profile')" class="nav-item flex flex-col items-center gap-1" id="nav-profile">
-                <i class="fa-solid fa-circle-user text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">บัญชี</span>
+                <i class="fa-solid fa-user-gear text-lg"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Profile</span>
             </button>
         </nav>
     </div>
 
     <script>
+        // --- 1. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAnC_H0mfIJWY_Y73kRFnjtWZvOHIOOopQ",
             authDomain: "project-otp-shop.firebaseapp.com",
@@ -170,7 +171,7 @@
             measurementId: "G-Q1XLN31ZJ2"
         };
 
-        // ใส่ UID ของคุณที่นี่ (เรียบร้อยแล้ว)
+        // --- 2. YOUR ADMIN UID ---
         const ADMIN_UID = "PB0XBSlLWRNFJyZNY4RwooNArSw1"; 
 
         firebase.initializeApp(firebaseConfig);
@@ -180,44 +181,110 @@
 
         let currentUserData = null;
 
+        // UI Switcher
         function switchPage(page) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.getElementById(`page-${page}`).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             if(document.getElementById(`nav-${page}`)) document.getElementById(`nav-${page}`).classList.add('active');
+            window.scrollTo(0, 0);
         }
 
-        async function handleBuy(itemName, price) {
-            if(!currentUserData) return;
-            if(currentUserData.balance < price) return alert('ยอดเงินไม่เพียงพอครับ');
-            if(confirm(`ยืนยันการซื้อ ${itemName} ฿${price}?`)) {
+        // --- ADMIN CONTROLS ---
+
+        async function adminAddProduct() {
+            const name = document.getElementById('prod-name').value.trim();
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const status = document.getElementById('prod-status').value;
+
+            if(!name || isNaN(price)) return alert('กรอกข้อมูลไม่ครบ');
+
+            try {
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('products').add({
+                    name, price, status, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert('เพิ่มสินค้าสำเร็จ');
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-price').value = '';
+            } catch(e) { alert(e.message); }
+        }
+
+        async function adminDeleteProduct(id) {
+            if(confirm('ลบสินค้านี้ใช่หรือไม่?')) {
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('products').doc(id).delete();
+            }
+        }
+
+        async function adminUpdateBalance() {
+            const targetUid = document.getElementById('admin-target-uid').value.trim();
+            const amount = parseFloat(document.getElementById('admin-amount').value);
+            if(!targetUid || isNaN(amount)) return alert('ข้อมูลไม่ครบ');
+            try {
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(targetUid).update({
+                    balance: firebase.firestore.FieldValue.increment(amount)
+                });
+                alert('อัปเดตยอดเงินสำเร็จ');
+            } catch(e) { alert('ไม่พบ UID นี้ในระบบ'); }
+        }
+
+        // --- STORE & LOGIC ---
+
+        function loadProducts() {
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('products')
+            .onSnapshot(snap => {
+                const list = document.getElementById('product-list');
+                list.innerHTML = '';
+                if(snap.empty) {
+                    list.innerHTML = '<div class="text-center py-10 opacity-30 text-xs">ยังไม่มีสินค้าในร้าน</div>';
+                    return;
+                }
+                
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const isOut = p.status === 'out';
+                    const isAdmin = auth.currentUser && auth.currentUser.uid === ADMIN_UID;
+                    
+                    list.innerHTML += `
+                        <div class="glass p-4 rounded-[2rem] flex items-center justify-between border border-white/5 ${isOut ? 'opacity-40' : ''}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl btn-gradient flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
+                                    <i class="fa-solid fa-box-open"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">${p.name}</h4>
+                                    <p class="text-[10px] text-purple-400 font-bold">฿ ${p.price.toFixed(2)}</p>
+                                    <p class="text-[9px] ${isOut ? 'text-red-500' : 'text-green-500'} font-bold uppercase">${isOut ? 'Out of Stock' : 'Available'}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="${!isOut ? `handleBuy('${doc.id}', ${p.price})` : ''}" class="bg-white/5 hover:bg-purple-500 px-4 py-2 rounded-xl text-[10px] font-bold transition">Buy</button>
+                                ${isAdmin ? `<button onclick="adminDeleteProduct('${doc.id}')" class="text-[8px] text-red-500 font-black uppercase">Del</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        async function handleBuy(id, price) {
+            if(currentUserData.balance < price) return alert('ยอดเงินไม่เพียงพอ');
+            if(confirm('ต้องการซื้อสินค้านี้?')) {
                 try {
-                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(auth.currentUser.uid).update({
-                        balance: firebase.firestore.FieldValue.increment(-price)
-                    });
-                    alert('สั่งซื้อสำเร็จ!');
+                    const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(auth.currentUser.uid);
+                    await userRef.update({ balance: firebase.firestore.FieldValue.increment(-price) });
+                    alert('สั่งซื้อสำเร็จ! โปรดติดต่อรับสินค้า');
                 } catch(e) { alert(e.message); }
             }
         }
 
         function handleTopup() {
             const link = document.getElementById('topup-link').value;
-            if(!link.includes('gift.truemoney.com')) return alert('ลิ้งค์ซองไม่ถูกต้อง');
-            alert('ส่งข้อมูลตรวจสอบแล้ว ยอดเงินจะเข้าภายใน 1-5 นาที');
+            if(!link.includes('gift.truemoney.com')) return alert('ลิ้งค์ซองของขวัญไม่ถูกต้อง');
+            alert('ระบบได้รับข้อมูลแล้ว ยอดเงินจะเข้าภายใน 1-5 นาที');
             document.getElementById('topup-link').value = '';
         }
 
-        async function adminUpdateBalance() {
-            const targetUid = document.getElementById('admin-target-uid').value.trim();
-            const amount = parseFloat(document.getElementById('admin-amount').value);
-            if(!targetUid || isNaN(amount)) return alert('ระบุข้อมูลให้ครบ');
-            try {
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('users').doc(targetUid).update({
-                    balance: firebase.firestore.FieldValue.increment(amount)
-                });
-                alert('อัปเดตยอดเงินสำเร็จ!');
-            } catch(e) { alert('Error: ' + e.message); }
-        }
+        // --- AUTH SYSTEM ---
 
         auth.onAuthStateChanged(user => {
             const authLayer = document.getElementById('auth-layer');
@@ -234,6 +301,7 @@
                         document.getElementById('profile-name').innerText = currentUserData.username;
                     }
                 });
+                loadProducts();
             } else {
                 authLayer.classList.remove('hidden');
                 document.getElementById('admin-btn').classList.add('hidden');
@@ -244,9 +312,11 @@
         function toggleMode() {
             isLogin = !isLogin;
             document.getElementById('auth-title').innerText = isLogin ? 'Login' : 'Register';
+            document.getElementById('toggle-btn').innerText = isLogin ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
             document.getElementById('reg-fields').classList.toggle('hidden', isLogin);
             document.getElementById('login-fields').classList.toggle('hidden', !isLogin);
         }
+
         async function handleAuth() {
             const username = document.getElementById('auth-username').value.trim().toLowerCase();
             if(!username) return alert('ระบุ Username');
@@ -262,7 +332,6 @@
                         username: username, balance: 0, email: email
                     });
                     try { await auth.createUserWithEmailAndPassword(`${username}@shop.internal`, pass); } catch(e){}
-                    alert('ยินดีต้อนรับ!');
                 }
             } catch(e) { alert(e.message); }
         }
